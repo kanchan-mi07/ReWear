@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Search, Plus, Coins, Settings, LogOut } from "lucide-react"
+import { Search, Plus, Coins, Settings, LogOut, Bell } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface AppUser {
@@ -25,6 +25,43 @@ interface AppUser {
   points: number
   is_admin: boolean
   avatar_url?: string
+}
+
+function NotificationsDropdown() {
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/notifications", { credentials: "include" })
+        .then(res => res.json())
+        .then(data => setNotifications(data.notifications || []))
+    }
+  }, [open])
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(v => !v)} className="relative p-2 rounded hover:bg-gray-100">
+        <Bell className="h-6 w-6" />
+        {notifications.some(n => !n.is_read) && (
+          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg z-50 max-h-96 overflow-y-auto">
+          <div className="p-2 font-semibold border-b">Notifications</div>
+          {notifications.length === 0 ? (
+            <div className="p-4 text-gray-500">No notifications</div>
+          ) : notifications.map((n, i) => (
+            <div key={n.id || i} className={`p-3 border-b last:border-b-0 ${!n.is_read ? "bg-gray-50" : ""}`}>
+              <div className="text-sm">{n.message}</div>
+              <div className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleString()}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function Navbar() {
@@ -113,10 +150,10 @@ export function Navbar() {
                   </Link>
                 )}
 
-                <div className="flex items-center space-x-2 text-sm">
+                <Link href="/dashboard/coins" className="flex items-center space-x-2 text-sm hover:underline">
                   <Coins className="h-4 w-4 text-yellow-500" />
                   <span className="font-medium">{user.points}</span>
-                </div>
+                </Link>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

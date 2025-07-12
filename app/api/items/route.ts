@@ -7,12 +7,26 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get("category")
     const search = searchParams.get("search")
+    const mine = searchParams.get("mine")
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "12")
     const offset = (page - 1) * limit
 
     let items
-    if (category && category !== "all") {
+    if (mine === "1") {
+      const token = request.cookies.get("auth-token")?.value
+      const user = await getCurrentUser(token)
+      if (!user) return NextResponse.json({ items: [] })
+      items = await sql`
+        SELECT i.*, u.name as user_name, u.avatar_url as user_avatar, c.name as category_name
+        FROM items i
+        LEFT JOIN users u ON i.user_id = u.id
+        LEFT JOIN categories c ON i.category_id = c.id
+        WHERE i.user_id = ${user.id} AND i.is_approved = true AND i.is_available = true
+        ORDER BY i.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+    } else if (category && category !== "all") {
       if (search) {
         items = await sql`
           SELECT i.*, u.name as user_name, u.avatar_url as user_avatar, c.name as category_name

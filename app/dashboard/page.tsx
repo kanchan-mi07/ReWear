@@ -51,6 +51,11 @@ export default function DashboardPage() {
         </Button>
       </div>
       <h1 className="text-3xl font-bold mb-8">My Dashboard</h1>
+      <div className="mb-6">
+        <a href="/dashboard/swaps">
+          <Button variant="outline">Manage Swap Requests</Button>
+        </a>
+      </div>
       <div className="grid md:grid-cols-2 gap-8">
         {/* Uploaded Items Overview */}
         <Card>

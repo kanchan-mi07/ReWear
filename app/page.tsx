@@ -148,18 +148,20 @@ export default function HomePage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-square relative">
-                  <Image src={item.image || "/placeholder.svg"} alt={item.title} fill className="object-cover" />
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-2">{item.title}</h3>
-                  <div className="flex justify-between items-center">
-                    <Badge variant="secondary">{item.condition}</Badge>
-                    <span className="text-sm font-medium text-green-700">{item.points} points</span>
+              <Link key={item.id} href={`/items/${item.id}`} className="block">
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="aspect-square relative">
+                    <Image src={item.image || "/placeholder.svg"} alt={item.title} fill className="object-cover" />
                   </div>
-                </CardContent>
-              </Card>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold mb-2">{item.title}</h3>
+                    <div className="flex justify-between items-center">
+                      <Badge variant="secondary">{item.condition}</Badge>
+                      <span className="text-sm font-medium text-green-700">{item.points} points</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

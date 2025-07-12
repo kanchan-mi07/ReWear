@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     // Get the category_id of the current item
     const items = await sql`SELECT category_id FROM items WHERE id = ${id} AND is_approved = true LIMIT 1`
     const item = items[0]
-    if (!item) {
+    if (!item || !item.category_id) {
       return NextResponse.json({ items: [] })
     }
     // Get related items in the same category, excluding the current item
@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     `
     return NextResponse.json({ items: related })
   } catch (error) {
+    console.error("/api/items/related error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 } 
