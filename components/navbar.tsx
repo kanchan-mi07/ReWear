@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Search, Plus, Coins, Settings, LogOut, Bell, ShoppingBag } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { createPortal } from "react-dom"
 
 interface AppUser {
   id: number
@@ -70,6 +71,8 @@ function NotificationsDropdown() {
 export function Navbar() {
   const [user, setUser] = useState<AppUser | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname();
   const { toast } = useToast()
@@ -103,6 +106,58 @@ export function Navbar() {
     }, 10000)
     return () => clearInterval(poll)
   }, [user, lastNotifiedId, toast])
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [mobileMenuOpen])
+
+  // Focus trap and Esc key close for mobile menu
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const focusableSelectors = [
+      'a[href]', 'button:not([disabled])', 'input:not([disabled])', '[tabindex]:not([tabindex="-1"])'
+    ]
+    const menu = mobileMenuRef.current
+    if (!menu) return
+    const focusableEls = menu.querySelectorAll<HTMLElement>(focusableSelectors.join(','))
+    if (focusableEls.length) focusableEls[0].focus()
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false)
+      } else if (e.key === "Tab") {
+        // Focus trap
+        const first = focusableEls[0]
+        const last = focusableEls[focusableEls.length - 1]
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault()
+            last.focus()
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault()
+            first.focus()
+          }
+        }
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [mobileMenuOpen])
+
+  // Auto-close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   const fetchUser = async () => {
     try {
@@ -150,16 +205,31 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b shadow-sm">
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between gap-4">
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group select-none">
             <span className="rounded-full bg-green-100 p-2 shadow-sm">
               <ShoppingBag className="h-6 w-6 text-green-700 group-hover:scale-110 transition-transform duration-200" />
             </span>
-            <span className="text-3xl font-extrabold tracking-tight text-green-700 group-hover:text-green-800 font-serif drop-shadow-sm transition-colors duration-200">
+            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-green-700 group-hover:text-green-800 font-serif drop-shadow-sm transition-colors duration-200">
               Re<span className="text-blue-600">W</span>ear
             </span>
           </Link>
 
-          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-8 hidden md:block">
+          {/* Hamburger for mobile */}
+          <button
+            className={`md:hidden p-2 rounded focus:outline-none transition-transform duration-200 flex flex-col justify-center items-center w-10 h-10 ${mobileMenuOpen ? 'open' : ''}`}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label="Open menu"
+            aria-controls="mobile-menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            <span className={`block w-7 h-0.5 bg-sky-700 transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+            <span className={`block w-7 h-0.5 bg-sky-700 transition-all duration-300 my-1 ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
+            <span className={`block w-7 h-0.5 bg-sky-700 transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+          </button>
+
+          {/* Desktop nav */}
+          <form onSubmit={handleSearch} className="hidden md:block flex-1 max-w-md mx-8">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -171,8 +241,7 @@ export function Navbar() {
               />
             </div>
           </form>
-
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="hidden md:flex items-center gap-2 md:gap-4">
             {user ? (
               <>
                 {!(user.is_admin && pathname.startsWith("/admin")) && (
@@ -183,15 +252,12 @@ export function Navbar() {
                     </Button>
                   </Link>
                 )}
-
                 <Link href="/dashboard/coins" className="flex items-center space-x-2 text-sm hover:underline">
                   <Coins className="h-4 w-4 text-yellow-500" />
                   <span className="font-medium">{user.points}</span>
                 </Link>
-
                 {/* Notification Button */}
                 <NotificationsDropdown />
-
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -244,6 +310,101 @@ export function Navbar() {
             )}
           </div>
         </div>
+
+        {/* Mobile menu overlay */}
+        {typeof window !== 'undefined' && mobileMenuOpen && createPortal(
+          <>
+            <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
+            <div className="fixed inset-0 z-50 flex justify-end">
+              <div
+                id="mobile-menu"
+                ref={mobileMenuRef}
+                role="dialog"
+                aria-modal="true"
+                tabIndex={-1}
+                className="relative w-full max-w-xs h-full bg-white/80 backdrop-blur-lg border-l border-sky-100 shadow-2xl rounded-l-2xl flex flex-col overflow-y-auto pt-8 pb-8 animate-slide-in"
+              >
+                {/* Mobile menu header */}
+                <div className="flex items-center justify-between px-6 pb-2">
+                  <Link href="/" className="flex items-center gap-2">
+                    <span className="rounded-full bg-green-100 p-2 shadow-sm">
+                      <ShoppingBag className="h-6 w-6 text-green-700" />
+                    </span>
+                    <span className="text-2xl font-extrabold tracking-tight text-green-700 font-serif drop-shadow-sm">
+                      Re<span className="text-blue-600">W</span>ear
+                    </span>
+                  </Link>
+                  <button
+                    className="ml-4 p-2 rounded-full hover:bg-sky-100 transition"
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-label="Close menu"
+                  >
+                    <svg className="h-7 w-7 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {/* Mobile search */}
+                <form onSubmit={handleSearch} className="px-6 mb-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      type="text"
+                      placeholder="Search for clothing items..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 rounded-full border-green-200 focus:border-green-500 shadow-sm"
+                    />
+                  </div>
+                </form>
+                {/* Mobile nav links and actions */}
+                <div className="flex flex-col gap-3 px-6 pb-8 mt-2">
+                  {user ? (
+                    <>
+                      {!(user.is_admin && pathname.startsWith("/admin")) && (
+                        <Link href="/items/new">
+                          <Button variant="outline" size="lg" className="w-full flex items-center justify-center gap-2 text-lg font-semibold py-3">
+                            <Plus className="h-5 w-5" />
+                            List Item
+                          </Button>
+                        </Link>
+                      )}
+                      <Link href="/dashboard/coins" className="w-full flex items-center gap-2 text-lg font-semibold py-3 rounded-md hover:bg-sky-50 transition">
+                        <Coins className="h-5 w-5 text-yellow-500" />
+                        <span>{user.points}</span>
+                        <span className="text-base font-medium text-sky-900">Coins</span>
+                      </Link>
+                      <button className="w-full flex items-center gap-2 text-lg font-semibold py-3 rounded-md hover:bg-sky-50 transition" type="button" tabIndex={0} aria-label="Notifications">
+                        <Bell className="h-5 w-5" />
+                        <span>Notifications</span>
+                      </button>
+                      <div className="border-t border-sky-100 my-2" />
+                      <Link href="/dashboard" className="w-full flex items-center gap-2 text-lg font-semibold py-3 rounded-md hover:bg-sky-50 transition">
+                        <Settings className="h-5 w-5" />
+                        <span>Dashboard</span>
+                      </Link>
+                      {user.is_admin && (
+                        <Link href="/admin" className="w-full flex items-center gap-2 text-lg font-semibold py-3 rounded-md hover:bg-sky-50 transition">
+                          <Settings className="h-5 w-5" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      )}
+                      <Button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 text-lg font-semibold py-3">
+                        <LogOut className="h-5 w-5" />
+                        Log out
+                      </Button>
+                    </>
+                  ) : (
+                    <Link href="/auth">
+                      <Button className="w-full flex items-center justify-center gap-2 text-lg font-semibold py-3">Sign In</Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
       </div>
     </nav>
   )

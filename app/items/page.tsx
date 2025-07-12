@@ -75,23 +75,24 @@ export default function ItemsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => window.history.back()} className="flex items-center gap-2">
+    <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <Button variant="ghost" onClick={() => window.history.back()} className="flex items-center gap-2 w-max">
             <ArrowLeft className="h-4 w-4" />
-            Back
+            <span className="hidden xs:inline">Back</span>
           </Button>
-          <h1 className="text-3xl font-bold">Browse Items</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Browse Items</h1>
         </div>
-        <Link href="/items/new">
-          <Button>List New Item</Button>
+        <Link href="/items/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">List New Item</Button>
         </Link>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
-        <form onSubmit={handleSearch} className="flex gap-4 mb-4">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border mb-6 sm:mb-8">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -99,15 +100,15 @@ export default function ItemsPage() {
               placeholder="Search for items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
             />
           </div>
-          <Button type="submit">Search</Button>
+          <Button type="submit" className="w-full sm:w-auto">Search</Button>
         </form>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -124,7 +125,7 @@ export default function ItemsPage() {
 
       {/* Items Grid */}
       {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="overflow-hidden">
               <div className="aspect-square bg-gray-200 animate-pulse" />
@@ -136,7 +137,7 @@ export default function ItemsPage() {
           ))}
         </div>
       ) : items.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {items.map((item) => (
             <Link key={item.id} href={`/items/${item.id}`}>
               <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
@@ -149,12 +150,14 @@ export default function ItemsPage() {
                   />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold mb-2 line-clamp-2">{item.title}</h3>
+                  <h3 className="font-semibold mb-2 line-clamp-2 text-base sm:text-lg">{item.title}</h3>
                   <div className="flex justify-between items-center mb-2">
                     <Badge variant="secondary">{item.condition}</Badge>
                     <span className="text-sm font-medium text-green-700">{item.points_value} points</span>
                   </div>
-                  <p className="text-sm text-gray-600">by {item.user?.name || "Unknown"}</p>
+                  {item.user?.name && (
+                    <p className="text-sm text-gray-600">by {item.user.name}</p>
+                  )}
                 </CardContent>
               </Card>
             </Link>
@@ -163,8 +166,8 @@ export default function ItemsPage() {
       ) : (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">No items found matching your criteria.</p>
-          <Link href="/items/new" className="mt-4 inline-block">
-            <Button>List the first item</Button>
+          <Link href="/items/new" className="mt-4 inline-block w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">List the first item</Button>
           </Link>
         </div>
       )}

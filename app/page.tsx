@@ -72,27 +72,27 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-sky-100/60 to-mint-100/60" />
         </div>
         {/* Hero Content */}
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-sky-700 mb-6 drop-shadow-sm">
+        <div className="container mx-auto px-2 sm:px-4 md:px-8 text-center relative z-10">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-sky-700 mb-4 sm:mb-6 drop-shadow-sm">
             Welcome to <span className="text-mint-600">ReWear</span>
           </h1>
-          <p className="text-xl md:text-2xl text-sky-800/80 mb-8 max-w-2xl mx-auto drop-shadow-sm">
+          <p className="text-base sm:text-xl md:text-2xl text-sky-800/80 mb-6 sm:mb-8 max-w-2xl mx-auto drop-shadow-sm">
             Join our community clothing exchange platform. Swap, share, and discover pre-loved fashion while promoting sustainable living.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/items">
-              <Button size="lg" className="bg-mint-400 text-sky-900 font-bold hover:bg-mint-300 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full max-w-xl mx-auto">
+            <Link href="/items" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-mint-400 text-sky-900 font-bold hover:bg-mint-300 shadow-sm">
                 Start Swapping
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/items">
-              <Button size="lg" className="bg-white/90 text-sky-700 border-2 border-sky-100 hover:bg-sky-50 font-semibold shadow-sm">
+            <Link href="/items" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-white/90 text-sky-700 border-2 border-sky-100 hover:bg-sky-50 font-semibold shadow-sm">
                 Browse Items
               </Button>
             </Link>
-            <Link href="/items/new">
-              <Button size="lg" className="bg-sky-200 text-mint-900 font-bold hover:bg-sky-300 shadow-sm">
+            <Link href="/items/new" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-sky-200 text-mint-900 font-bold hover:bg-sky-300 shadow-sm">
                 List an Item
               </Button>
             </Link>
@@ -101,10 +101,10 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white/90 backdrop-blur-md">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-extrabold text-sky-700 text-center mb-12">Why Choose ReWear?</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+      <section className="py-10 sm:py-16 bg-white/90 backdrop-blur-md">
+        <div className="container mx-auto px-2 sm:px-4 md:px-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-sky-700 text-center mb-8 sm:mb-12">Why Choose ReWear?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
             <div className="text-center bg-mint-50 rounded-xl shadow p-6 hover:scale-105 transition-transform">
               <div className="bg-sky-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow">
                 <Recycle className="h-8 w-8 text-mint-500" />
@@ -137,15 +137,15 @@ export default function HomePage() {
       </section>
 
       {/* Featured Items */}
-      <section className="py-16 bg-gradient-to-br from-white via-sky-50 to-mint-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-extrabold text-sky-700">Featured Items</h2>
+      <section className="py-10 sm:py-16 bg-gradient-to-br from-white via-sky-50 to-mint-50">
+        <div className="container mx-auto px-2 sm:px-4 md:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-sky-700">Featured Items</h2>
             <Link href="/items">
               <Button className="bg-white/90 text-sky-700 border-2 border-sky-100 hover:bg-sky-50 font-semibold shadow-sm">View All Items</Button>
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {featuredItems.length === 0 ? (
               <div className="col-span-4 text-center text-gray-400 py-12">No featured items yet. List and approve an item to see it here!</div>
             ) : (
@@ -171,10 +171,10 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-br from-white via-sky-100 to-mint-100 text-sky-800">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-extrabold mb-4 drop-shadow-sm">Ready to Start Your Sustainable Fashion Journey?</h2>
-          <p className="text-xl mb-8 opacity-90">
+      <section className="py-10 sm:py-16 bg-gradient-to-br from-white via-sky-100 to-mint-100 text-sky-800">
+        <div className="container mx-auto px-2 sm:px-4 md:px-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold mb-3 sm:mb-4 drop-shadow-sm">Ready to Start Your Sustainable Fashion Journey?</h2>
+          <p className="text-base sm:text-xl mb-6 sm:mb-8 opacity-90">
             Join thousands of users who are making a difference, one swap at a time.
           </p>
           {user ? (
