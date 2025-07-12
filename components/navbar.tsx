@@ -70,10 +70,32 @@ export function Navbar() {
   const router = useRouter()
   const pathname = usePathname();
   const { toast } = useToast()
+  const [lastNotifiedId, setLastNotifiedId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchUser()
   }, [])
+
+  // Poll for new notifications every 10 seconds
+  useEffect(() => {
+    if (!user) return
+    const poll = setInterval(async () => {
+      const res = await fetch("/api/notifications", { credentials: "include" })
+      if (res.ok) {
+        const data = await res.json()
+        const unread = (data.notifications || []).filter((n: any) => !n.is_read)
+        if (unread.length > 0) {
+          // Only show toast for the latest unseen notification
+          const latest = unread[0]
+          if (latest.id !== lastNotifiedId) {
+            toast({ title: latest.message })
+            setLastNotifiedId(latest.id)
+          }
+        }
+      }
+    }, 10000)
+    return () => clearInterval(poll)
+  }, [user, lastNotifiedId, toast])
 
   const fetchUser = async () => {
     try {

@@ -53,13 +53,39 @@ export async function PATCH(request: NextRequest) {
   const user = await getCurrentUser(token)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const body = await request.json()
-  const { swap_id, status, responder_item_id } = body
-  if (!swap_id || !status) {
+  const { swap_id, status, responder_item_id, chat_thread, delivery_method } = body
+  if (!swap_id) {
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 })
+  }
+  const swap = (await sql`SELECT * FROM swaps WHERE id = ${swap_id}`)[0]
+  if (!swap) return NextResponse.json({ error: "Swap not found" }, { status: 404 })
+
+  // Handle chat update
+  if (typeof chat_thread !== 'undefined') {
+    if (swap.requester_id !== user.id && swap.responder_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    const result = await sql`
+      UPDATE swaps SET chat_thread = ${chat_thread}, updated_at = NOW() WHERE id = ${swap_id} RETURNING *
+    `
+    return NextResponse.json({ swap: result[0] })
+  }
+
+  // Handle delivery method update
+  if (typeof delivery_method !== 'undefined') {
+    if (swap.requester_id !== user.id && swap.responder_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    const result = await sql`
+      UPDATE swaps SET delivery_method = ${delivery_method}, updated_at = NOW() WHERE id = ${swap_id} RETURNING *
+    `
+    return NextResponse.json({ swap: result[0] })
+  }
+
+  if (!status) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 })
   }
   // Only responder can update status, except for cancel
-  const swap = (await sql`SELECT * FROM swaps WHERE id = ${swap_id}`)[0]
-  if (!swap) return NextResponse.json({ error: "Swap not found" }, { status: 404 })
   let result
   if (status === "cancelled") {
     // Only requester can cancel

@@ -64,48 +64,55 @@ export default function SwapsDashboard() {
               <p>Loading...</p>
             ) : incoming.length > 0 ? (
               <ul className="space-y-4">
-                {incoming.map((swap) => (
-                  <li key={swap.id} className="border-b pb-2">
-                    <div className="flex justify-between items-center">
-                      <span>From user #{swap.requester_id}</span>
-                      <Badge>{swap.status}</Badge>
-                    </div>
-                    <div className="text-xs text-gray-500">Requested item #{swap.responder_item_id} for your item #{swap.requester_item_id}</div>
-                    {swap.status === "pending" && (
-                      <div className="flex gap-2 mt-2">
-                        <Button size="sm" onClick={async () => {
-                          await fetch("/api/swaps", {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ swap_id: swap.id, status: "accepted" }),
-                            credentials: "include"
-                          })
-                          fetchSwaps()
-                        }}>Accept</Button>
-                        <Button size="sm" variant="outline" onClick={async () => {
-                          await fetch("/api/swaps", {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ swap_id: swap.id, status: "declined" }),
-                            credentials: "include"
-                          })
-                          fetchSwaps()
-                        }}>Decline</Button>
-                        <Button size="sm" variant="secondary" onClick={async () => {
-                          const newItemId = prompt("Enter your item ID to counter-offer:")
-                          if (!newItemId) return
-                          await fetch("/api/swaps", {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ swap_id: swap.id, status: "countered", responder_item_id: Number(newItemId) }),
-                            credentials: "include"
-                          })
-                          fetchSwaps()
-                        }}>Counter-Offer</Button>
+                {incoming.map((swap) => {
+                  const itemId = user && swap.requester_id === user.id ? swap.responder_item_id : swap.requester_item_id
+                  return (
+                    <li key={swap.id} className="border-b pb-2 cursor-pointer hover:bg-gray-50"
+                      onClick={() => router.push(`/items/${itemId}`)}>
+                      <div className="flex justify-between items-center">
+                        <span>From user #{swap.requester_id}</span>
+                        <Badge>{swap.status}</Badge>
                       </div>
-                    )}
-                  </li>
-                ))}
+                      <div className="text-xs text-gray-500">Requested item #{swap.responder_item_id} for your item #{swap.requester_item_id}</div>
+                      {swap.status === "pending" && (
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" onClick={async (e) => {
+                            e.stopPropagation();
+                            await fetch("/api/swaps", {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ swap_id: swap.id, status: "accepted" }),
+                              credentials: "include"
+                            })
+                            fetchSwaps()
+                          }}>Accept</Button>
+                          <Button size="sm" variant="outline" onClick={async (e) => {
+                            e.stopPropagation();
+                            await fetch("/api/swaps", {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ swap_id: swap.id, status: "declined" }),
+                              credentials: "include"
+                            })
+                            fetchSwaps()
+                          }}>Decline</Button>
+                          <Button size="sm" variant="secondary" onClick={async (e) => {
+                            e.stopPropagation();
+                            const newItemId = prompt("Enter your item ID to counter-offer:")
+                            if (!newItemId) return
+                            await fetch("/api/swaps", {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ swap_id: swap.id, status: "countered", responder_item_id: Number(newItemId) }),
+                              credentials: "include"
+                            })
+                            fetchSwaps()
+                          }}>Counter-Offer</Button>
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             ) : (
               <div className="text-gray-500">No incoming swap requests.</div>

@@ -7,40 +7,60 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
-interface Item {
-  id: number
-  title: string
-  condition: string
-  points_value: number
-  is_available: boolean
-}
-
-interface Swap {
-  id: number
-  item_title: string
-  status: string // "ongoing" | "completed"
-  created_at: string
-}
-
 export default function DashboardPage() {
-  const [uploadedItems, setUploadedItems] = useState<Item[]>([])
-  const [swaps, setSwaps] = useState<Swap[]>([])
+  const [uploadedItems, setUploadedItems] = useState<any[]>([])
+  const [swaps, setSwaps] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
-    // TODO: Fetch uploaded items and swaps for the current user
-    // Placeholder data for now
-    setUploadedItems([
-      { id: 1, title: "Vintage Denim Jacket", condition: "Good", points_value: 75, is_available: true },
-      { id: 2, title: "Summer Floral Dress", condition: "Excellent", points_value: 60, is_available: false },
-    ])
-    setSwaps([
-      { id: 1, item_title: "Designer Sneakers", status: "ongoing", created_at: "2024-06-01" },
-      { id: 2, item_title: "Wool Winter Coat", status: "completed", created_at: "2024-05-20" },
-    ])
-    setLoading(false)
+    fetchUser()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      fetchUploadedItems()
+      fetchSwaps()
+    }
+  }, [user])
+
+  const fetchUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me", { credentials: "include" })
+      if (res.ok) {
+        const data = await res.json()
+        setUser(data.user)
+      }
+    } catch {}
+    setLoading(false)
+  }
+
+  const fetchUploadedItems = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/items?mine=1", { credentials: "include" })
+      if (res.ok) {
+        const data = await res.json()
+        setUploadedItems(data.items)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchSwaps = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/swaps", { credentials: "include" })
+      if (res.ok) {
+        const data = await res.json()
+        setSwaps(data.swaps)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -67,7 +87,7 @@ export default function DashboardPage() {
               <p>Loading...</p>
             ) : uploadedItems.length > 0 ? (
               <ul className="space-y-4">
-                {uploadedItems.map((item) => (
+                {uploadedItems.map((item: any) => (
                   <li key={item.id} className="flex justify-between items-center border-b pb-2">
                     <span>
                       <span className="font-semibold">{item.title}</span> <span className="text-xs text-gray-500">({item.condition})</span>
@@ -95,17 +115,22 @@ export default function DashboardPage() {
               <p>Loading...</p>
             ) : swaps.length > 0 ? (
               <ul className="space-y-4">
-                {swaps.map((swap) => (
-                  <li key={swap.id} className="flex justify-between items-center border-b pb-2">
-                    <span>
-                      <span className="font-semibold">{swap.item_title}</span>
-                      <span className="ml-2 text-xs text-gray-500">{swap.created_at}</span>
-                    </span>
-                    <span className={swap.status === "completed" ? "text-green-700" : "text-yellow-600"}>
-                      {swap.status.charAt(0).toUpperCase() + swap.status.slice(1)}
-                    </span>
-                  </li>
-                ))}
+                {swaps.map((swap: any) => {
+                  // Determine which item to link to: show the other user's item
+                  const itemId = user && swap.requester_id === user.id ? swap.responder_item_id : swap.requester_item_id
+                  return (
+                    <li key={swap.id} className="flex justify-between items-center border-b pb-2 cursor-pointer hover:bg-gray-50"
+                      onClick={() => router.push(`/items/${itemId}`)}>
+                      <span>
+                        <span className="font-semibold">Item #{swap.requester_item_id} ↔ Item #{swap.responder_item_id}</span>
+                        <span className="ml-2 text-xs text-gray-500">{new Date(swap.created_at).toLocaleDateString()}</span>
+                      </span>
+                      <span className={swap.status === "accepted" ? "text-green-700" : swap.status === "pending" ? "text-yellow-600" : "text-gray-400"}>
+                        {swap.status.charAt(0).toUpperCase() + swap.status.slice(1)}
+                      </span>
+                    </li>
+                  )
+                })}
               </ul>
             ) : (
               <div className="text-gray-500">No swaps yet.</div>
