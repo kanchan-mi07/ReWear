@@ -46,37 +46,44 @@ export default function SwapsDashboard() {
   const outgoing = user ? swaps.filter((s) => s.requester_id === user.id) : []
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-mint-50 py-8">
+      <div className="container mx-auto px-4">
       <div className="mb-6">
-        <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2">
+        <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2 text-sky-700 hover:bg-sky-50">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
       </div>
-      <h1 className="text-3xl font-bold mb-8">My Swaps</h1>
+      <h1 className="text-4xl font-extrabold text-sky-700 mb-8 drop-shadow-sm">My Swaps</h1>
       <div className="grid md:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Incoming Requests</CardTitle>
+        <Card className="bg-white/90 border-2 border-mint-100 rounded-2xl shadow p-0">
+          <CardHeader className="bg-mint-50 rounded-t-2xl">
+            <CardTitle className="text-lg font-bold text-mint-700">Incoming Requests</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <p>Loading...</p>
             ) : incoming.length > 0 ? (
-              <ul className="space-y-4">
+              <ul className="divide-y divide-mint-100">
                 {incoming.map((swap) => {
                   const itemId = user && swap.requester_id === user.id ? swap.responder_item_id : swap.requester_item_id
                   return (
-                    <li key={swap.id} className="border-b pb-2 cursor-pointer hover:bg-gray-50"
+                    <li key={swap.id} className="flex flex-col gap-2 py-3 px-2 cursor-pointer hover:bg-mint-50 transition rounded-lg"
                       onClick={() => router.push(`/items/${itemId}`)}>
                       <div className="flex justify-between items-center">
-                        <span>From user #{swap.requester_id}</span>
-                        <Badge>{swap.status}</Badge>
+                        <span className="text-sky-700 font-semibold">From user #{swap.requester_id}</span>
+                        <Badge className={
+                          swap.status === "accepted"
+                            ? "bg-mint-100 text-mint-700"
+                            : swap.status === "pending"
+                            ? "bg-yellow-50 text-yellow-600"
+                            : "bg-gray-50 text-gray-400"
+                        }>{swap.status.charAt(0).toUpperCase() + swap.status.slice(1)}</Badge>
                       </div>
-                      <div className="text-xs text-gray-500">Requested item #{swap.responder_item_id} for your item #{swap.requester_item_id}</div>
+                      <div className="text-xs text-gray-400">Requested item #{swap.responder_item_id} for your item #{swap.requester_item_id}</div>
                       {swap.status === "pending" && (
-                        <div className="flex gap-2 mt-2">
-                          <Button size="sm" onClick={async (e) => {
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Button size="sm" className="bg-mint-400 text-sky-900 font-bold hover:bg-mint-300 shadow-sm" onClick={async (e) => {
                             e.stopPropagation();
                             await fetch("/api/swaps", {
                               method: "PATCH",
@@ -86,7 +93,7 @@ export default function SwapsDashboard() {
                             })
                             fetchSwaps()
                           }}>Accept</Button>
-                          <Button size="sm" variant="outline" onClick={async (e) => {
+                          <Button size="sm" variant="outline" className="border-sky-100 text-sky-700 hover:bg-sky-50 shadow-sm" onClick={async (e) => {
                             e.stopPropagation();
                             await fetch("/api/swaps", {
                               method: "PATCH",
@@ -96,7 +103,7 @@ export default function SwapsDashboard() {
                             })
                             fetchSwaps()
                           }}>Decline</Button>
-                          <Button size="sm" variant="secondary" onClick={async (e) => {
+                          <Button size="sm" variant="secondary" className="bg-sky-200 text-mint-900 font-bold hover:bg-sky-300 shadow-sm" onClick={async (e) => {
                             e.stopPropagation();
                             const newItemId = prompt("Enter your item ID to counter-offer:")
                             if (!newItemId) return
@@ -115,35 +122,42 @@ export default function SwapsDashboard() {
                 })}
               </ul>
             ) : (
-              <div className="text-gray-500">No incoming swap requests.</div>
+              <div className="text-gray-400">No incoming swap requests.</div>
             )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Outgoing Requests</CardTitle>
+        <Card className="bg-white/90 border-2 border-sky-100 rounded-2xl shadow p-0">
+          <CardHeader className="bg-sky-50 rounded-t-2xl">
+            <CardTitle className="text-lg font-bold text-sky-700">Outgoing Requests</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <p>Loading...</p>
             ) : outgoing.length > 0 ? (
-              <ul className="space-y-4">
+              <ul className="divide-y divide-sky-100">
                 {outgoing.map((swap) => (
-                  <li key={swap.id} className="border-b pb-2">
+                  <li key={swap.id} className="flex flex-col gap-2 py-3 px-2">
                     <div className="flex justify-between items-center">
-                      <span>To user #{swap.responder_id}</span>
-                      <Badge>{swap.status}</Badge>
+                      <span className="text-sky-700 font-semibold">To user #{swap.responder_id}</span>
+                      <Badge className={
+                        swap.status === "accepted"
+                          ? "bg-mint-100 text-mint-700"
+                          : swap.status === "pending"
+                          ? "bg-yellow-50 text-yellow-600"
+                          : "bg-gray-50 text-gray-400"
+                      }>{swap.status.charAt(0).toUpperCase() + swap.status.slice(1)}</Badge>
                     </div>
-                    <div className="text-xs text-gray-500">Your item #{swap.requester_item_id} for item #{swap.responder_item_id}</div>
+                    <div className="text-xs text-gray-400">Your item #{swap.requester_item_id} for item #{swap.responder_item_id}</div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="text-gray-500">No outgoing swap requests.</div>
+              <div className="text-gray-400">No outgoing swap requests.</div>
             )}
           </CardContent>
         </Card>
       </div>
+    </div>
     </div>
   )
 } 

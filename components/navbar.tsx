@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Search, Plus, Coins, Settings, LogOut, Bell } from "lucide-react"
+import { Search, Plus, Coins, Settings, LogOut, Bell, ShoppingBag } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface AppUser {
@@ -147,14 +147,19 @@ export function Navbar() {
   }
 
   return (
-    <nav className="border-b bg-white sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-green-700">
-            ReWear
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b shadow-sm">
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2 group select-none">
+            <span className="rounded-full bg-green-100 p-2 shadow-sm">
+              <ShoppingBag className="h-6 w-6 text-green-700 group-hover:scale-110 transition-transform duration-200" />
+            </span>
+            <span className="text-3xl font-extrabold tracking-tight text-green-700 group-hover:text-green-800 font-serif drop-shadow-sm transition-colors duration-200">
+              Re<span className="text-blue-600">W</span>ear
+            </span>
           </Link>
 
-          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-8">
+          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-8 hidden md:block">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -162,12 +167,12 @@ export function Navbar() {
                 placeholder="Search for clothing items..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 rounded-full border-green-200 focus:border-green-500 shadow-sm"
               />
             </div>
           </form>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {user ? (
               <>
                 {!(user.is_admin && pathname.startsWith("/admin")) && (
