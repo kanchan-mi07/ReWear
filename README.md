@@ -139,9 +139,3 @@ Contributions are welcome! Please open issues or submit pull requests for improv
 3. Commit your changes (`git commit -am 'Add new feature'`)
 4. Push to the branch (`git push origin feature/your-feature`)
 5. Open a pull request
-
----
-
-## License
-
-This project is licensed under the MIT License. 
