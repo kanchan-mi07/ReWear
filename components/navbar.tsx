@@ -49,7 +49,10 @@ function NotificationsDropdown() {
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg z-50 max-h-96 overflow-y-auto">
-          <div className="p-2 font-semibold border-b">Notifications</div>
+          <div className="p-2 font-semibold border-b flex items-center justify-between">
+            <span>Notifications</span>
+            <Link href="/notifications" className="text-xs text-green-700 hover:underline">View all</Link>
+          </div>
           {notifications.length === 0 ? (
             <div className="p-4 text-gray-500">No notifications</div>
           ) : notifications.map((n, i) => (
@@ -80,18 +83,22 @@ export function Navbar() {
   useEffect(() => {
     if (!user) return
     const poll = setInterval(async () => {
-      const res = await fetch("/api/notifications", { credentials: "include" })
-      if (res.ok) {
-        const data = await res.json()
-        const unread = (data.notifications || []).filter((n: any) => !n.is_read)
-        if (unread.length > 0) {
-          // Only show toast for the latest unseen notification
-          const latest = unread[0]
-          if (latest.id !== lastNotifiedId) {
-            toast({ title: latest.message })
-            setLastNotifiedId(latest.id)
+      try {
+        const res = await fetch("/api/notifications", { credentials: "include" })
+        if (res.ok) {
+          const data = await res.json()
+          const unread = (data.notifications || []).filter((n: any) => !n.is_read)
+          if (unread.length > 0) {
+            // Only show toast for the latest unseen notification
+            const latest = unread[0]
+            if (latest.id !== lastNotifiedId) {
+              toast({ title: latest.message })
+              setLastNotifiedId(latest.id)
+            }
           }
         }
+      } catch (e) {
+        // Silently ignore polling errors
       }
     }, 10000)
     return () => clearInterval(poll)
@@ -176,6 +183,9 @@ export function Navbar() {
                   <Coins className="h-4 w-4 text-yellow-500" />
                   <span className="font-medium">{user.points}</span>
                 </Link>
+
+                {/* Notification Button */}
+                <NotificationsDropdown />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

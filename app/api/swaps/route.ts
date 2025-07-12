@@ -65,9 +65,21 @@ export async function PATCH(request: NextRequest) {
     if (swap.requester_id !== user.id && swap.responder_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
+    // Parse old and new chat threads to detect new message
+    let oldMessages = []
+    try { oldMessages = swap.chat_thread ? JSON.parse(swap.chat_thread) : [] } catch {}
+    let newMessages = []
+    try { newMessages = chat_thread ? JSON.parse(chat_thread) : [] } catch {}
+    const isNewMessage = newMessages.length > oldMessages.length
+    const lastMsg = isNewMessage ? newMessages[newMessages.length - 1] : null
+    const otherUserId = user.id === swap.requester_id ? swap.responder_id : swap.requester_id
     const result = await sql`
       UPDATE swaps SET chat_thread = ${chat_thread}, updated_at = NOW() WHERE id = ${swap_id} RETURNING *
     `
+    // If a new message was sent, notify the other user
+    if (isNewMessage && lastMsg && otherUserId) {
+      await createNotification(otherUserId, "swap_message", swap_id, `New message from ${user.name || "your swap partner"} in your swap.`)
+    }
     return NextResponse.json({ swap: result[0] })
   }
 
