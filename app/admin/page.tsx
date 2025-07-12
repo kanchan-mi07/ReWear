@@ -77,10 +77,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Admin Panel</h1>
-      <Tabs value={tab} onValueChange={setTab} className="mb-8">
-        <TabsList>
+    <div className="container mx-auto px-4 py-10">
+      <h1 className="text-4xl font-extrabold mb-10 text-center text-green-700 tracking-tight">Admin Panel</h1>
+      <Tabs value={tab} onValueChange={setTab} className="mb-10 flex flex-col items-center">
+        <TabsList className="bg-gray-100 rounded-lg shadow p-2">
           <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="rejected">Rejected</TabsTrigger>
@@ -88,39 +88,45 @@ export default function AdminDashboard() {
         </TabsList>
       </Tabs>
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex justify-center items-center h-40">
+          <span className="text-lg text-gray-500">Loading...</span>
+        </div>
       ) : error ? (
-        <p className="text-red-600">{error}</p>
+        <div className="flex justify-center items-center h-40">
+          <span className="text-red-600 text-lg">{error}</span>
+        </div>
       ) : items.length === 0 ? (
-        <p className="text-gray-500">No items found.</p>
+        <div className="flex justify-center items-center h-40">
+          <span className="text-gray-500 text-lg">No items found.</span>
+        </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {items.map((item) => (
-            <Card key={item.id}>
-              <CardHeader>
-                <CardTitle>{item.title}</CardTitle>
+            <Card key={item.id} className="p-0 overflow-hidden">
+              <CardHeader className="bg-green-50 border-b p-4">
+                <CardTitle className="text-xl font-bold text-green-800">{item.title}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 mb-4">
-                  <div className="w-32 h-32 relative">
-                    <Image src={item.images?.[0] || "/placeholder.svg?height=200&width=200"} alt={item.title} fill className="object-cover rounded" />
+              <CardContent className="p-6">
+                <div className="flex gap-6 mb-6 items-center">
+                  <div className="w-36 h-36 relative rounded-xl overflow-hidden border shadow">
+                    <Image src={item.images?.[0] || "/placeholder.svg?height=200&width=200"} alt={item.title} fill className="object-cover" />
                   </div>
                   <div className="flex-1">
-                    <div className="mb-2">
+                    <div className="mb-3 flex items-center gap-3">
                       <Badge variant="secondary">{item.condition}</Badge>
-                      <span className="ml-2 text-green-700 font-medium">{item.points_value} pts</span>
+                      <span className="text-green-700 font-semibold text-lg">{item.points_value} pts</span>
                     </div>
-                    <div className="mb-2 text-sm text-gray-600 flex items-center gap-2">
-                      <Image src={item.user_avatar || "/placeholder-user.jpg"} alt={item.user_name} width={24} height={24} className="rounded-full" />
-                      {item.user_name}
+                    <div className="mb-3 text-base text-gray-700 flex items-center gap-2">
+                      <Image src={item.user_avatar || "/placeholder-user.jpg"} alt={item.user_name} width={32} height={32} className="rounded-full border" />
+                      <span className="font-medium">{item.user_name}</span>
                     </div>
-                    <div className="mb-2 text-xs text-gray-500">{item.is_available ? "Available" : "Not Available"}</div>
+                    <div className={`mb-3 text-xs font-semibold ${item.is_available ? 'text-green-600' : 'text-gray-400'}`}>{item.is_available ? "Available" : "Not Available"}</div>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  {tab === "pending" && <Button size="sm" onClick={() => handleApprove(item.id)}>Approve</Button>}
-                  {tab === "pending" && <Button size="sm" variant="outline" onClick={() => handleReject(item.id)}>Reject</Button>}
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>Delete</Button>
+                <div className="flex gap-3 justify-end">
+                  {tab === "pending" && <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(item.id)}>Approve</Button>}
+                  {tab === "pending" && <Button size="sm" variant="outline" className="border-green-600 text-green-700 hover:bg-green-50" onClick={() => handleReject(item.id)}>Reject</Button>}
+                  <Button size="sm" variant="destructive" className="hover:bg-red-700" onClick={() => handleDelete(item.id)}>Delete</Button>
                 </div>
               </CardContent>
             </Card>

@@ -128,82 +128,6 @@ export default function ItemDetailPage() {
           Back to Items
         </Button>
       </div>
-      {/* Swap Chat UI, only if toggled */}
-      {isUserInSwap && showSwapChat && (
-        <div className="flex flex-col items-center mb-8">
-          <h1 className="text-2xl font-bold mb-4">Swap Communication</h1>
-          <div className="w-full max-w-lg">
-            <div className="mb-2">Contact your swap partner to coordinate delivery:</div>
-            {/* Chat UI */}
-            <div className="mb-2 border rounded bg-white max-h-48 overflow-y-auto p-2">
-              {chatMessages.length === 0 ? (
-                <div className="text-gray-400">No messages yet.</div>
-              ) : chatMessages.map((msg: any, i: number) => (
-                <div key={i} className={msg.userId === user.id ? "text-right" : "text-left"}>
-                  <span className="inline-block px-2 py-1 rounded bg-gray-100 mb-1">{msg.text}</span>
-                  <div className="text-xs text-gray-400">{msg.userName} • {new Date(msg.time).toLocaleTimeString()}</div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-            <form className="flex gap-2" onSubmit={async e => {
-              e.preventDefault()
-              if (!chatInput.trim()) return
-              const newMsg = { userId: user.id, userName: user.name, text: chatInput, time: Date.now() }
-              const newThread = JSON.stringify([...chatMessages, newMsg])
-              await fetch("/api/swaps", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ swap_id: activeSwap.id, chat_thread: newThread }),
-                credentials: "include"
-              })
-              setChatInput("")
-              fetchActiveSwap()
-              setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100)
-            }}>
-              <input
-                className="flex-1 border rounded px-2 py-1"
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                placeholder="Type a message..."
-              />
-              <Button type="submit" size="sm">Send</Button>
-            </form>
-            {/* Delivery method selection */}
-            <div className="mt-4">
-              <div className="font-semibold mb-1">Choose delivery method:</div>
-              <select
-                className="border rounded px-2 py-1"
-                value={activeSwap.delivery_method || ""}
-                onChange={async e => {
-                  await fetch("/api/swaps", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ swap_id: activeSwap.id, delivery_method: e.target.value }),
-                    credentials: "include"
-                  })
-                  fetchActiveSwap()
-                }}
-              >
-                <option value="">Select...</option>
-                <option value="meetup">Meetup (in-person handoff)</option>
-                <option value="shipping">Shipping</option>
-              </select>
-              {activeSwap.delivery_method && (
-                <div className="text-sm text-gray-600 mt-2">Selected: {activeSwap.delivery_method === "meetup" ? "Meetup (in-person)" : "Shipping"}</div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Show button to open swap chat if user is in swap and item is reserved */}
-      {isUserInSwap && !showSwapChat && (
-        <div className="mb-8 flex justify-center">
-          <Button onClick={() => setShowSwapChat(true)}>
-            Go to Swap Conversation
-          </Button>
-        </div>
-      )}
       {/* Always show item details below */}
       <div className="flex flex-col md:flex-row gap-8">
         {/* Image Gallery */}
@@ -283,11 +207,11 @@ export default function ItemDetailPage() {
                   <Button type="submit" size="sm">Send</Button>
                 </form>
                 {/* Delivery method selection */}
-                <div className="mt-4">
+                <div className="mt-6">
                   <div className="font-semibold mb-1">Choose delivery method:</div>
                   <select
-                    className="border rounded px-2 py-1"
-                    value={activeSwap.delivery_method || ""}
+                    className="border rounded-lg px-3 py-2 w-full"
+                    value={activeSwap?.delivery_method || ""}
                     onChange={async e => {
                       await fetch("/api/swaps", {
                         method: "PATCH",
@@ -302,9 +226,20 @@ export default function ItemDetailPage() {
                     <option value="meetup">Meetup (in-person handoff)</option>
                     <option value="shipping">Shipping</option>
                   </select>
-                  {activeSwap.delivery_method && (
+                  {activeSwap?.delivery_method && (
                     <div className="text-sm text-gray-600 mt-2">Selected: {activeSwap.delivery_method === "meetup" ? "Meetup (in-person)" : "Shipping"}</div>
                   )}
+                  {/* Place Order button below delivery method */}
+                  <div className="flex justify-end mt-6">
+                    <Button
+                      className="h-10 px-8 text-base font-semibold"
+                      variant="default"
+                      disabled={!activeSwap?.delivery_method}
+                      onClick={() => toast({ title: 'Order placed!', description: `Delivery method: ${activeSwap?.delivery_method === 'meetup' ? 'Meetup' : 'Shipping'}` })}
+                    >
+                      Place Order
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -405,13 +340,35 @@ export default function ItemDetailPage() {
               )}
               <Button
                 variant="outline"
-                disabled={!item.is_available}
-                onClick={() => {
+                disabled={!item.is_available || !user}
+                onClick={async () => {
                   if (!user) {
                     router.push("/auth")
                     return
                   }
-                  // TODO: handle redeem logic here
+                  const res = await fetch(`/api/items/${item.id}`, {
+                    method: "POST",
+                    credentials: "include"
+                  })
+                  if (res.ok) {
+                    toast({ title: "Item redeemed successfully!" })
+                    // Refresh item state and user points
+                    setLoading(true)
+                    Promise.all([
+                      fetch(`/api/items/${id}`).then(res => res.ok ? res.json() : Promise.reject("Item not found")),
+                      fetch(`/api/items/related?id=${id}`).then(res => res.ok ? res.json() : [])
+                    ])
+                      .then(([itemData, relatedData]) => {
+                        setItem(itemData.item)
+                        setRelatedItems(relatedData.items || [])
+                      })
+                      .catch((err) => setError(typeof err === "string" ? err : "Failed to load item"))
+                      .finally(() => setLoading(false))
+                    fetchUser()
+                  } else {
+                    const data = await res.json()
+                    toast({ title: data.error || "Failed to redeem item", variant: "destructive" })
+                  }
                 }}
               >
                 Redeem via Points

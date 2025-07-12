@@ -104,6 +104,13 @@ export async function POST(request: NextRequest) {
       RETURNING *
     `
 
+    // Check if this is the user's first item
+    const itemCount = (await sql`SELECT COUNT(*) FROM items WHERE user_id = ${user.id}`)[0].count
+    if (Number(itemCount) === 1) {
+      await sql`UPDATE users SET points = points + 50 WHERE id = ${user.id}`
+      // Optionally: log transaction in point_transactions
+    }
+
     return NextResponse.json({ item: items[0] })
   } catch (error) {
     console.error("Item creation error:", error)

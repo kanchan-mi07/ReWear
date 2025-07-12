@@ -128,7 +128,20 @@ export async function PATCH(request: NextRequest) {
     // Notify both users
     await createNotification(swap.requester_id, "swap_accepted", swap_id, `Your swap request with ${user.name || "the responder"} has been accepted! Items: ${reqItem?.title} ↔ ${resItem?.title}`)
     await createNotification(swap.responder_id, "swap_accepted", swap_id, `You accepted a swap with ${user.name || "the responder"}. Items: ${reqItem?.title} ↔ ${resItem?.title}`)
-  } else {
+  }
+  else if (status === "completed") {
+    // Only allow requester or responder to mark as completed
+    if (swap.requester_id !== user.id && swap.responder_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    result = await sql`
+      UPDATE swaps SET status = 'completed', updated_at = NOW() WHERE id = ${swap_id} RETURNING *
+    `
+    // Award +100 coins to both users
+    await sql`UPDATE users SET points = points + 100 WHERE id = ${swap.requester_id}`
+    await sql`UPDATE users SET points = points + 100 WHERE id = ${swap.responder_id}`
+    // Optionally: log transaction in point_transactions
+    // Optionally: notify users
+  }
+  else {
     if (swap.responder_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     result = await sql`
       UPDATE swaps SET status = ${status}, updated_at = NOW() WHERE id = ${swap_id} RETURNING *

@@ -16,11 +16,21 @@ interface AppUser {
   is_admin: boolean
 }
 
+interface Item {
+  id: number
+  title: string
+  images?: string[]
+  condition: string
+  points_value: number
+}
+
 export default function HomePage() {
   const [user, setUser] = useState<AppUser | null>(null)
+  const [featuredItems, setFeaturedItems] = useState<Item[]>([])
 
   useEffect(() => {
     fetchUser()
+    fetchFeaturedItems()
   }, [])
 
   const fetchUser = async () => {
@@ -37,36 +47,15 @@ export default function HomePage() {
     }
   }
 
-  const featuredItems = [
-    {
-      id: 1,
-      title: "Vintage Denim Jacket",
-      image: "/placeholder.svg?height=300&width=300",
-      condition: "Good",
-      points: 75,
-    },
-    {
-      id: 2,
-      title: "Summer Floral Dress",
-      image: "/placeholder.svg?height=300&width=300",
-      condition: "Excellent",
-      points: 60,
-    },
-    {
-      id: 3,
-      title: "Designer Sneakers",
-      image: "/placeholder.svg?height=300&width=300",
-      condition: "Like New",
-      points: 90,
-    },
-    {
-      id: 4,
-      title: "Wool Winter Coat",
-      image: "/placeholder.svg?height=300&width=300",
-      condition: "Good",
-      points: 85,
-    },
-  ]
+  const fetchFeaturedItems = async () => {
+    try {
+      const response = await fetch("/api/items?limit=4")
+      if (response.ok) {
+        const data = await response.json()
+        setFeaturedItems(data.items || [])
+      }
+    } catch {}
+  }
 
   return (
     <div className="min-h-screen">
@@ -147,22 +136,26 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredItems.map((item) => (
-              <Link key={item.id} href={`/items/${item.id}`} className="block">
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                  <div className="aspect-square relative">
-                    <Image src={item.image || "/placeholder.svg"} alt={item.title} fill className="object-cover" />
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold mb-2">{item.title}</h3>
-                    <div className="flex justify-between items-center">
-                      <Badge variant="secondary">{item.condition}</Badge>
-                      <span className="text-sm font-medium text-green-700">{item.points} points</span>
+            {featuredItems.length === 0 ? (
+              <div className="col-span-4 text-center text-gray-400 py-12">No featured items yet. List and approve an item to see it here!</div>
+            ) : (
+              featuredItems.map((item) => (
+                <Link key={item.id} href={`/items/${item.id}`} className="block">
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                    <div className="aspect-square relative">
+                      <Image src={item.images?.[0] || "/placeholder.svg?height=300&width=300"} alt={item.title} fill className="object-cover" />
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">{item.title}</h3>
+                      <div className="flex justify-between items-center">
+                        <Badge variant="secondary">{item.condition}</Badge>
+                        <span className="text-sm font-medium text-green-700">{item.points_value} points</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </section>
